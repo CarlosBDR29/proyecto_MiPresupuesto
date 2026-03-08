@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../providers/presupuesto_provider.dart';
 import '../providers/loginregistro_provider.dart';
+import '../providers/categoria_provider.dart';
 import '../models/presupuesto.dart';
 
 class PresupuestosPage extends StatefulWidget {
@@ -14,7 +15,6 @@ class PresupuestosPage extends StatefulWidget {
 }
 
 class _PresupuestosPageState extends State<PresupuestosPage> {
-
   @override
   void initState() {
     super.initState();
@@ -22,15 +22,17 @@ class _PresupuestosPageState extends State<PresupuestosPage> {
     Future.microtask(() {
       final loginProvider = context.read<LoginRegistroProvider>();
       final presupuestoProvider = context.read<PresupuestoProvider>();
+      final categoriaProvider = context.read<CategoriaProvider>();
 
-      presupuestoProvider.obtenerPresupuestosUsuario(
-        loginProvider.usuario!.documentId!,
-      );
+      final idUsu = loginProvider.usuario!.documentId!;
+
+      presupuestoProvider.obtenerPresupuestosUsuario(idUsu);
+
+      categoriaProvider.obtenerCategoriasUsuario(idUsu);
     });
   }
 
   void mostrarFormulario() {
-
     final tituloController = TextEditingController();
     final descripcionController = TextEditingController();
     final limiteController = TextEditingController();
@@ -41,17 +43,14 @@ class _PresupuestosPageState extends State<PresupuestosPage> {
     showDialog(
       context: context,
       builder: (context) {
-
         return AlertDialog(
           title: const Text("Nuevo Presupuesto"),
           content: StatefulBuilder(
             builder: (context, setState) {
-
               return SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-
                     TextField(
                       controller: tituloController,
                       decoration: const InputDecoration(labelText: "Título"),
@@ -59,7 +58,9 @@ class _PresupuestosPageState extends State<PresupuestosPage> {
 
                     TextField(
                       controller: descripcionController,
-                      decoration: const InputDecoration(labelText: "Descripción"),
+                      decoration: const InputDecoration(
+                        labelText: "Descripción",
+                      ),
                     ),
 
                     TextField(
@@ -71,11 +72,12 @@ class _PresupuestosPageState extends State<PresupuestosPage> {
                     const SizedBox(height: 10),
 
                     ElevatedButton(
-                      child: Text(inicio == null
-                          ? "Fecha inicio"
-                          : inicio.toString().split(' ')[0]),
+                      child: Text(
+                        inicio == null
+                            ? "Fecha inicio"
+                            : inicio.toString().split(' ')[0],
+                      ),
                       onPressed: () async {
-
                         final fecha = await showDatePicker(
                           context: context,
                           firstDate: DateTime(2020),
@@ -90,11 +92,12 @@ class _PresupuestosPageState extends State<PresupuestosPage> {
                     ),
 
                     ElevatedButton(
-                      child: Text(fin == null
-                          ? "Fecha fin"
-                          : fin.toString().split(' ')[0]),
+                      child: Text(
+                        fin == null
+                            ? "Fecha fin"
+                            : fin.toString().split(' ')[0],
+                      ),
                       onPressed: () async {
-
                         final fecha = await showDatePicker(
                           context: context,
                           firstDate: DateTime(2020),
@@ -107,14 +110,12 @@ class _PresupuestosPageState extends State<PresupuestosPage> {
                         }
                       },
                     ),
-
                   ],
                 ),
               );
             },
           ),
           actions: [
-
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text("Cancelar"),
@@ -123,12 +124,9 @@ class _PresupuestosPageState extends State<PresupuestosPage> {
             ElevatedButton(
               child: const Text("Guardar"),
               onPressed: () async {
+                final loginProvider = context.read<LoginRegistroProvider>();
 
-                final loginProvider =
-                    context.read<LoginRegistroProvider>();
-
-                final presupuestoProvider =
-                    context.read<PresupuestoProvider>();
+                final presupuestoProvider = context.read<PresupuestoProvider>();
 
                 Presupuesto nuevo = Presupuesto(
                   titulo: tituloController.text,
@@ -146,7 +144,6 @@ class _PresupuestosPageState extends State<PresupuestosPage> {
                 Navigator.pop(context);
               },
             ),
-
           ],
         );
       },
@@ -155,7 +152,6 @@ class _PresupuestosPageState extends State<PresupuestosPage> {
 
   @override
   Widget build(BuildContext context) {
-
     final provider = context.watch<PresupuestoProvider>();
 
     return Scaffold(
@@ -163,7 +159,6 @@ class _PresupuestosPageState extends State<PresupuestosPage> {
       body: ListView.builder(
         itemCount: provider.presupuestos.length,
         itemBuilder: (context, index) {
-
           final presupuesto = provider.presupuestos[index];
 
           return ListTile(
