@@ -38,6 +38,8 @@ dependencies:
   go_router: ^14.2.0
   flutter_dotenv: ^6.0.0 # Carga de variables de entorno desde un archivo .env
   crypto: ^3.0.3
+  image_picker: ^1.0.7
+  image: ^4.0.0
 
 
   # The following adds the Cupertino Icons font to your application.

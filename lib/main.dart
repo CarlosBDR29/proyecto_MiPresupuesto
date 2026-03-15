@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+//import 'package:file_picker/file_picker.dart';
 
 import 'routes/rutas.dart';
 // import 'providers/auth_provider.dart';  // Lo crearemos después
 import 'providers/loginregistro_provider.dart';
 import 'providers/categoria_provider.dart';
 import 'providers/presupuesto_provider.dart';
+import 'providers/gasto_provider.dart';
+
 
 
 Future<void> main() async {
@@ -37,6 +40,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => LoginRegistroProvider()),
         ChangeNotifierProvider(create: (_) => CategoriaProvider()),
         ChangeNotifierProvider(create: (_) => PresupuestoProvider()),
+        ChangeNotifierProvider(create: (_) => GastoProvider()),
       ],
       child: const MyApp(),
     ),
