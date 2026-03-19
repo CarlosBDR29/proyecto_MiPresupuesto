@@ -39,13 +39,25 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
 
   Future<void> mostrarFormularioGasto(
     BuildContext context,
-    String? idPresupuesto,
-  ) async {
-    final tituloController = TextEditingController();
-    final descripcionController = TextEditingController();
-    final costeController = TextEditingController();
-    DateTime? fecha;
-    Uint8List? imageBytes;
+    String? idPresupuesto, {
+    Gasto? gastoExistente,
+    double? costeAnterior,
+  }) async {
+    final tituloController = TextEditingController(
+      text: gastoExistente?.titulo ?? "",
+    );
+
+    final descripcionController = TextEditingController(
+      text: gastoExistente?.descripcion ?? "",
+    );
+
+    final costeController = TextEditingController(
+      text: gastoExistente?.coste.toString() ?? "",
+    );
+
+    DateTime? fecha = gastoExistente?.fecha;
+    Uint8List? imageBytes = gastoExistente?.photoBytes;
+
     File? selectedFile;
 
     void mostrarSnackBar(String mensaje) {
@@ -75,7 +87,7 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Nuevo Gasto"),
+          title: Text(gastoExistente == null ? "Nuevo Gasto" : "Editar Gasto"),
           content: StatefulBuilder(
             builder: (context, setState) {
               return SingleChildScrollView(
@@ -153,6 +165,7 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
 
                 final loginProvider = context.read<LoginRegistroProvider>();
                 final gastoProvider = context.read<GastoProvider>();
+                final presupuestoProvider = context.read<PresupuestoProvider>();
 
                 final textoCoste = costeController.text.replaceAll(',', '.');
                 final coste = double.tryParse(textoCoste);
@@ -162,20 +175,37 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
                   return;
                 }
 
-                final nuevoGasto = Gasto(
-                  titulo: tituloController.text,
-                  descripcion: descripcionController.text,
-                  coste: coste,
-                  fecha: fecha!,
-                  photoBytes: imageBytes,
-                  idPresu: idPresupuesto!,
-                  idUsu: loginProvider.usuario!.documentId!,
-                );
+                if (gastoExistente == null) {
+                  // CREAR
+                  final nuevoGasto = Gasto(
+                    titulo: tituloController.text,
+                    descripcion: descripcionController.text,
+                    coste: coste,
+                    fecha: fecha!,
+                    photoBytes: imageBytes,
+                    idPresu: idPresupuesto!,
+                    idUsu: loginProvider.usuario!.documentId!,
+                  );
 
-                await gastoProvider.agregarGasto(
-                  nuevoGasto,
-                  context.read<PresupuestoProvider>(),
-                );
+                  await gastoProvider.agregarGasto(
+                    nuevoGasto,
+                    presupuestoProvider,
+                  );
+                } else {
+                  // EDITAR
+                  gastoExistente.titulo = tituloController.text;
+                  gastoExistente.descripcion = descripcionController.text;
+                  gastoExistente.coste = coste;
+                  gastoExistente.fecha = fecha!;
+                  gastoExistente.photoBytes = imageBytes;
+
+                  await gastoProvider.editarGasto(
+                    gastoExistente,
+                    presupuestoProvider,
+                    costeAnterior!,
+                  );
+                }
+
                 Navigator.pop(context);
               },
               child: const Text("Guardar"),
@@ -339,6 +369,25 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
                   title: Text(gasto.titulo),
                   subtitle: Text(
                     "${gasto.coste}€  |  ${gasto.fecha.toString().split(' ')[0]}",
+                  ),
+
+                  onTap: () {
+                    mostrarFormularioGasto(
+                      context,
+                      presupuesto.documentId!,
+                      gastoExistente: gasto,
+                      costeAnterior: gasto.coste,
+                    );
+                  },
+
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () async {
+                      await context.read<GastoProvider>().eliminarGasto(
+                        gasto,
+                        context.read<PresupuestoProvider>(),
+                      );
+                    },
                   ),
                 ),
               );
