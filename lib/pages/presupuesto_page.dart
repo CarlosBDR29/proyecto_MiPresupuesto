@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:image/image.dart' as img;
+import 'package:go_router/go_router.dart';
 
 //import 'package:file_picker/file_picker.dart';
 
@@ -228,10 +229,14 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
       text: presupuesto.limite.toString(),
     );
 
+    DateTime fechaInicio = presupuesto.fechaInicio;
+    DateTime fechaFin = presupuesto.fechaFin;
+
     Categoria? categoriaSeleccionada;
 
     final categorias = context.read<CategoriaProvider>().categorias;
 
+    // Si ya tiene categoría asignada
     if (presupuesto.idTag != null) {
       categoriaSeleccionada = categorias.firstWhere(
         (c) => c.documentId == presupuesto.idTag,
@@ -244,64 +249,140 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
       builder: (context) {
         return AlertDialog(
           title: const Text("Editar presupuesto"),
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextField(
-                  controller: tituloController,
-                  decoration: const InputDecoration(labelText: "Título"),
-                ),
+          content: StatefulBuilder(
+            builder: (context, setState) {
+              return SingleChildScrollView(
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: tituloController,
+                      decoration: const InputDecoration(labelText: "Título"),
+                    ),
+                    TextField(
+                      controller: descripcionController,
+                      decoration: const InputDecoration(
+                        labelText: "Descripción",
+                      ),
+                    ),
+                    TextField(
+                      controller: limiteController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: "Límite"),
+                    ),
+                    const SizedBox(height: 15),
 
-                TextField(
-                  controller: descripcionController,
-                  decoration: const InputDecoration(labelText: "Descripción"),
-                ),
+                    // Selección de fecha inicio
+                    ElevatedButton(
+                      onPressed: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2100),
+                          initialDate: fechaInicio,
+                        );
+                        if (picked != null)
+                          setState(() => fechaInicio = picked);
+                      },
+                      child: Text(
+                        "Fecha inicio: ${fechaInicio.toString().split(' ')[0]}",
+                      ),
+                    ),
 
-                TextField(
-                  controller: limiteController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: "Límite"),
-                ),
+                    // Selección de fecha fin
+                    ElevatedButton(
+                      onPressed: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          firstDate: fechaInicio,
+                          lastDate: DateTime(2100),
+                          initialDate: fechaFin,
+                        );
+                        if (picked != null) setState(() => fechaFin = picked);
+                      },
+                      child: Text(
+                        "Fecha fin: ${fechaFin.toString().split(' ')[0]}",
+                      ),
+                    ),
 
-                const SizedBox(height: 15),
+                    const SizedBox(height: 15),
 
-                DropdownButtonFormField<Categoria>(
-                  value: categoriaSeleccionada,
-                  hint: const Text("Seleccionar categoría"),
-                  items: categorias.map((categoria) {
-                    return DropdownMenuItem(
-                      value: categoria,
-                      child: Text(categoria.titulo),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    categoriaSeleccionada = value;
-                  },
+                    DropdownButtonFormField<Categoria>(
+                      value: categoriaSeleccionada,
+                      hint: const Text("Seleccionar categoría"),
+                      items: [
+                        const DropdownMenuItem<Categoria>(
+                          value: null,
+                          child: Text("Sin categoría"),
+                        ),
+                        ...categorias.map((categoria) {
+                          return DropdownMenuItem(
+                            value: categoria,
+                            child: Text(categoria.titulo),
+                          );
+                        }).toList(),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          categoriaSeleccionada = value;
+                        });
+                      },
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text("Cancelar"),
             ),
-
             ElevatedButton(
               onPressed: () async {
+                // Validación campos obligatorios
+                if (tituloController.text.isEmpty ||
+                    descripcionController.text.isEmpty ||
+                    limiteController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Completa todos los campos obligatorios"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                // Validación límite
+                final textoLimite = limiteController.text.replaceAll(',', '.');
+                final limite = double.tryParse(textoLimite);
+                if (limite == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Introduce un número válido en el límite"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                // Guardar cambios
                 presupuesto.titulo = tituloController.text;
                 presupuesto.descripcion = descripcionController.text;
-                presupuesto.limite = double.parse(limiteController.text);
+                presupuesto.limite = limite;
+                presupuesto.fechaInicio = fechaInicio;
+                presupuesto.fechaFin = fechaFin;
 
                 if (categoriaSeleccionada != null) {
                   presupuesto.idTag = categoriaSeleccionada!.documentId;
                   presupuesto.tag = categoriaSeleccionada!.titulo;
+                } else {
+                  presupuesto.idTag = null;
+                  presupuesto.tag = null;
                 }
 
                 await context.read<PresupuestoProvider>().editarPresupuesto(
                   presupuesto,
                 );
-
                 Navigator.pop(context);
               },
               child: const Text("Guardar"),
@@ -327,12 +408,43 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            Text("Descripción: ${presupuesto.descripcion}"),
-            Text("Límite: ${presupuesto.limite}"),
-            Text("Gastado: ${presupuesto.gastado}"),
-            Text("Restante: ${presupuesto.restante}"),
-            Text("Estado: ${presupuesto.estado}"),
-            Text("Categoría: ${presupuesto.tag ?? "Sin categoría"}"),
+            Card(
+              elevation: 3,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      presupuesto.descripcion,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    const SizedBox(height: 10),
+
+                    Text("Límite: ${presupuesto.limite} €"),
+                    Text("Gastado: ${presupuesto.gastado} €"),
+                    Text(
+                      "Restante: ${(presupuesto.restante < 0 ? 0 : presupuesto.restante)} €",
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Text(
+                      "Periodo:",
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      "${presupuesto.fechaInicio.toString().split(' ')[0]}  →  ${presupuesto.fechaFin.toString().split(' ')[0]}",
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Text("Estado: ${presupuesto.estado}"),
+                    Text("Categoría: ${presupuesto.tag ?? "Sin categoría"}"),
+                  ],
+                ),
+              ),
+            ),
 
             const SizedBox(height: 20),
 
@@ -347,9 +459,28 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
 
             ElevatedButton(
               onPressed: () async {
-                await provider.eliminarPresupuesto(presupuesto.documentId!);
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text("Confirmar eliminación"),
+                    content: const Text("¿Deseas eliminar este presupuesto?"),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text("Cancelar"),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text("Eliminar"),
+                      ),
+                    ],
+                  ),
+                );
 
-                Navigator.pop(context);
+                if (confirm == true) {
+                  await provider.eliminarPresupuesto(presupuesto.documentId!);
+                  if (context.mounted) context.go('/presupuestos');
+                }
               },
               child: const Text("Eliminar presupuesto"),
             ),
@@ -365,10 +496,31 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
 
             ...gastoProvider.gastos.map((gasto) {
               return Card(
+                margin: const EdgeInsets.symmetric(vertical: 6),
                 child: ListTile(
-                  title: Text(gasto.titulo),
-                  subtitle: Text(
-                    "${gasto.coste}€  |  ${gasto.fecha.toString().split(' ')[0]}",
+                  leading: gasto.photoBytes != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.memory(
+                            gasto.photoBytes!,
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : const Icon(Icons.receipt_long, size: 40),
+
+                  title: Text(
+                    gasto.titulo,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("${gasto.coste} €"),
+                      Text(gasto.fecha.toString().split(' ')[0]),
+                    ],
                   ),
 
                   onTap: () {
@@ -383,10 +535,30 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
                   trailing: IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
                     onPressed: () async {
-                      await context.read<GastoProvider>().eliminarGasto(
-                        gasto,
-                        context.read<PresupuestoProvider>(),
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text("Confirmar eliminación"),
+                          content: const Text("¿Deseas eliminar este gasto?"),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text("Cancelar"),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text("Eliminar"),
+                            ),
+                          ],
+                        ),
                       );
+
+                      if (confirm == true) {
+                        await context.read<GastoProvider>().eliminarGasto(
+                          gasto,
+                          context.read<PresupuestoProvider>(),
+                        );
+                      }
                     },
                   ),
                 ),
