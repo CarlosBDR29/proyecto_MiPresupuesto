@@ -6,8 +6,8 @@ import '../pages/menu_page.dart';
 import '../pages/categorias_page.dart';
 import '../pages/presupuestos_page.dart';
 import '../pages/presupuesto_page.dart';
-
-
+import '../pages/ganancias_page.dart';
+import '../pages/ganancia_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -37,6 +37,17 @@ class AppRouter {
           final id = state.pathParameters['id']!;
 
           return PresupuestoPage(documentId: id);
+        },
+      ),
+      GoRoute(
+        path: '/ganancias',
+        builder: (context, state) => const GananciasPage(),
+      ),
+      GoRoute(
+        path: '/ganancia/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return GananciaPage(documentId: id);
         },
       ),
     ],

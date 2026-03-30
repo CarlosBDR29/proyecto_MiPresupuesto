@@ -10,6 +10,8 @@ import 'providers/loginregistro_provider.dart';
 import 'providers/categoria_provider.dart';
 import 'providers/presupuesto_provider.dart';
 import 'providers/gasto_provider.dart';
+import 'providers/ganancia_provider.dart';
+import 'providers/ingreso_provider.dart';
 
 
 
@@ -41,6 +43,8 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => CategoriaProvider()),
         ChangeNotifierProvider(create: (_) => PresupuestoProvider()),
         ChangeNotifierProvider(create: (_) => GastoProvider()),
+        ChangeNotifierProvider(create: (_) => GananciaProvider()),
+        ChangeNotifierProvider(create: (_) => IngresoProvider()),
       ],
       child: const MyApp(),
     ),

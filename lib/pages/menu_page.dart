@@ -39,6 +39,12 @@ class MenuPage extends StatelessWidget {
               },
               child: const Text("Presupuestos"),
             ),
+            ElevatedButton(
+              onPressed: () {
+                context.go('/ganancias');
+              },
+              child: const Text("Ganancias"),
+            ),
           ],
         ),
       ),
