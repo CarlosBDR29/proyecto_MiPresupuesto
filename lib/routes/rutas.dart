@@ -8,6 +8,7 @@ import '../pages/presupuestos_page.dart';
 import '../pages/presupuesto_page.dart';
 import '../pages/ganancias_page.dart';
 import '../pages/ganancia_page.dart';
+import '../pages/estadisticas_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -49,6 +50,10 @@ class AppRouter {
           final id = state.pathParameters['id']!;
           return GananciaPage(documentId: id);
         },
+      ),
+      GoRoute(
+        path: '/estadisticas',
+        builder: (context, state) => const EstadisticasPage(),
       ),
     ],
   );
