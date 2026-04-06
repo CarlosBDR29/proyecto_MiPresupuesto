@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/ganancia.dart';
 
 class GananciaProvider extends ChangeNotifier {
-
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   List<Ganancia> _ganancias = [];
@@ -14,18 +13,21 @@ class GananciaProvider extends ChangeNotifier {
   // AGREGAR GANANCIA
   Future<void> agregarGanancia(Ganancia ganancia) async {
     try {
-
       final docRef = _firestore.collection('ganancias').doc();
 
       ganancia.documentId = docRef.id;
 
       // calcular faltante
-      ganancia.faltante =
-          Ganancia.calcularFaltante(ganancia.objetivo, ganancia.ganado);
+      ganancia.faltante = Ganancia.calcularFaltante(
+        ganancia.objetivo,
+        ganancia.ganado,
+      );
 
       // calcular estado
-      ganancia.estado =
-          Ganancia.calcularEstado(ganancia.fechaInicio, ganancia.fechaFin);
+      ganancia.estado = Ganancia.calcularEstado(
+        ganancia.fechaInicio,
+        ganancia.fechaFin,
+      );
 
       debugPrint(
         'Guardando ganancia ID: ${ganancia.documentId}, Titulo: ${ganancia.titulo}',
@@ -36,7 +38,6 @@ class GananciaProvider extends ChangeNotifier {
       _ganancias.add(ganancia);
 
       notifyListeners();
-
     } catch (e) {
       debugPrint('Error al agregar ganancia: $e');
       rethrow;
@@ -46,7 +47,6 @@ class GananciaProvider extends ChangeNotifier {
   // OBTENER GANANCIAS DEL USUARIO
   Future<void> obtenerGananciasUsuario(String idUsu) async {
     try {
-
       final query = await _firestore
           .collection('ganancias')
           .where('ganancia.idUsu', isEqualTo: idUsu)
@@ -55,7 +55,6 @@ class GananciaProvider extends ChangeNotifier {
       _ganancias.clear();
 
       for (var doc in query.docs) {
-
         final data = doc.data()['ganancia'];
 
         Ganancia ganancia = Ganancia.fromJson(data);
@@ -64,7 +63,6 @@ class GananciaProvider extends ChangeNotifier {
       }
 
       notifyListeners();
-
     } catch (e) {
       debugPrint('Error al obtener ganancias: $e');
     }
@@ -73,17 +71,19 @@ class GananciaProvider extends ChangeNotifier {
   // EDITAR GANANCIA
   Future<void> editarGanancia(Ganancia ganancia) async {
     try {
+      ganancia.faltante = Ganancia.calcularFaltante(
+        ganancia.objetivo,
+        ganancia.ganado,
+      );
 
-      ganancia.faltante =
-          Ganancia.calcularFaltante(ganancia.objetivo, ganancia.ganado);
+      ganancia.estado = Ganancia.calcularEstado(
+        ganancia.fechaInicio,
+        ganancia.fechaFin,
+      );
 
-      ganancia.estado =
-          Ganancia.calcularEstado(ganancia.fechaInicio, ganancia.fechaFin);
-
-      await _firestore
-          .collection('ganancias')
-          .doc(ganancia.documentId)
-          .update({'ganancia': ganancia.toJson()});
+      await _firestore.collection('ganancias').doc(ganancia.documentId).update({
+        'ganancia': ganancia.toJson(),
+      });
 
       int index = _ganancias.indexWhere(
         (g) => g.documentId == ganancia.documentId,
@@ -94,7 +94,6 @@ class GananciaProvider extends ChangeNotifier {
       }
 
       notifyListeners();
-
     } catch (e) {
       debugPrint('Error al editar ganancia: $e');
       rethrow;
@@ -104,20 +103,31 @@ class GananciaProvider extends ChangeNotifier {
   // ELIMINAR GANANCIA
   Future<void> eliminarGanancia(String documentId) async {
     try {
+      final batch = _firestore.batch();
 
-      await _firestore
-          .collection('ganancias')
-          .doc(documentId)
-          .delete();
+      // 🔹 Buscar ingresos asociados (campo anidado)
+      final ingresosSnapshot = await _firestore
+          .collection('ingresos')
+          .where('ingreso.idGanancia', isEqualTo: documentId)
+          .get();
+
+      for (var doc in ingresosSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // 🔹 Borrar ganancia
+      final gananciaRef = _firestore.collection('ganancias').doc(documentId);
+
+      batch.delete(gananciaRef);
+
+      await batch.commit();
 
       _ganancias.removeWhere((g) => g.documentId == documentId);
 
       notifyListeners();
-
     } catch (e) {
       debugPrint('Error al eliminar ganancia: $e');
       rethrow;
     }
   }
-
 }

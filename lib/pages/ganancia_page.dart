@@ -227,11 +227,14 @@ class _GananciaPageState extends State<GananciaPage> {
     Categoria? categoriaSeleccionada;
     final categorias = context.read<CategoriaProvider>().categorias;
 
-    if (ganancia.idTag != null) {
-      categoriaSeleccionada = categorias.firstWhere(
-        (c) => c.documentId == ganancia.idTag,
-        orElse: () => categorias.first,
-      );
+    if (ganancia.idTag != null && categorias.isNotEmpty) {
+      try {
+        categoriaSeleccionada = categorias.firstWhere(
+          (c) => c.documentId == ganancia.idTag,
+        );
+      } catch (_) {
+        categoriaSeleccionada = null;
+      }
     }
 
     await showDialog(

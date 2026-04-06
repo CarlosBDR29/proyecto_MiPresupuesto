@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/presupuesto.dart';
 
 class PresupuestoProvider extends ChangeNotifier {
-
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   List<Presupuesto> _presupuestos = [];
@@ -14,18 +13,21 @@ class PresupuestoProvider extends ChangeNotifier {
   // AGREGAR PRESUPUESTO
   Future<void> agregarPresupuesto(Presupuesto presupuesto) async {
     try {
-
       final docRef = _firestore.collection('presupuestos').doc();
 
       presupuesto.documentId = docRef.id;
 
       // calcular restante
-      presupuesto.restante =
-          Presupuesto.calcularRestante(presupuesto.limite, presupuesto.gastado);
+      presupuesto.restante = Presupuesto.calcularRestante(
+        presupuesto.limite,
+        presupuesto.gastado,
+      );
 
       // calcular estado
-      presupuesto.estado =
-          Presupuesto.calcularEstado(presupuesto.fechaInicio, presupuesto.fechaFin);
+      presupuesto.estado = Presupuesto.calcularEstado(
+        presupuesto.fechaInicio,
+        presupuesto.fechaFin,
+      );
 
       debugPrint(
         'Guardando presupuesto ID: ${presupuesto.documentId}, Titulo: ${presupuesto.titulo}',
@@ -36,7 +38,6 @@ class PresupuestoProvider extends ChangeNotifier {
       _presupuestos.add(presupuesto);
 
       notifyListeners();
-
     } catch (e) {
       debugPrint('Error al agregar presupuesto: $e');
       rethrow;
@@ -46,7 +47,6 @@ class PresupuestoProvider extends ChangeNotifier {
   // OBTENER PRESUPUESTOS DEL USUARIO
   Future<void> obtenerPresupuestosUsuario(String idUsu) async {
     try {
-
       final query = await _firestore
           .collection('presupuestos')
           .where('presupuesto.idUsu', isEqualTo: idUsu)
@@ -55,7 +55,6 @@ class PresupuestoProvider extends ChangeNotifier {
       _presupuestos.clear();
 
       for (var doc in query.docs) {
-
         final data = doc.data()['presupuesto'];
 
         Presupuesto presupuesto = Presupuesto.fromJson(data);
@@ -64,7 +63,6 @@ class PresupuestoProvider extends ChangeNotifier {
       }
 
       notifyListeners();
-
     } catch (e) {
       debugPrint('Error al obtener presupuestos: $e');
     }
@@ -73,12 +71,15 @@ class PresupuestoProvider extends ChangeNotifier {
   // EDITAR PRESUPUESTO
   Future<void> editarPresupuesto(Presupuesto presupuesto) async {
     try {
+      presupuesto.restante = Presupuesto.calcularRestante(
+        presupuesto.limite,
+        presupuesto.gastado,
+      );
 
-      presupuesto.restante =
-          Presupuesto.calcularRestante(presupuesto.limite, presupuesto.gastado);
-
-      presupuesto.estado =
-          Presupuesto.calcularEstado(presupuesto.fechaInicio, presupuesto.fechaFin);
+      presupuesto.estado = Presupuesto.calcularEstado(
+        presupuesto.fechaInicio,
+        presupuesto.fechaFin,
+      );
 
       await _firestore
           .collection('presupuestos')
@@ -94,7 +95,6 @@ class PresupuestoProvider extends ChangeNotifier {
       }
 
       notifyListeners();
-
     } catch (e) {
       debugPrint('Error al editar presupuesto: $e');
       rethrow;
@@ -104,20 +104,33 @@ class PresupuestoProvider extends ChangeNotifier {
   // ELIMINAR PRESUPUESTO
   Future<void> eliminarPresupuesto(String documentId) async {
     try {
+      final batch = _firestore.batch();
 
-      await _firestore
+      // 🔹 Buscar gastos asociados (campo anidado)
+      final gastosSnapshot = await _firestore
+          .collection('gastos')
+          .where('gasto.idPresu', isEqualTo: documentId)
+          .get();
+
+      for (var doc in gastosSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // 🔹 Borrar presupuesto
+      final presupuestoRef = _firestore
           .collection('presupuestos')
-          .doc(documentId)
-          .delete();
+          .doc(documentId);
+
+      batch.delete(presupuestoRef);
+
+      await batch.commit();
 
       _presupuestos.removeWhere((p) => p.documentId == documentId);
 
       notifyListeners();
-
     } catch (e) {
       debugPrint('Error al eliminar presupuesto: $e');
       rethrow;
     }
   }
-
 }

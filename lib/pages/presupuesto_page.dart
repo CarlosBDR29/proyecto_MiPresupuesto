@@ -237,11 +237,15 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
     final categorias = context.read<CategoriaProvider>().categorias;
 
     // Si ya tiene categoría asignada
-    if (presupuesto.idTag != null) {
-      categoriaSeleccionada = categorias.firstWhere(
-        (c) => c.documentId == presupuesto.idTag,
-        orElse: () => categorias.first,
-      );
+
+    if (presupuesto.idTag != null && categorias.isNotEmpty) {
+      try {
+        categoriaSeleccionada = categorias.firstWhere(
+          (c) => c.documentId == presupuesto.idTag,
+        );
+      } catch (_) {
+        categoriaSeleccionada = null;
+      }
     }
 
     await showDialog(
