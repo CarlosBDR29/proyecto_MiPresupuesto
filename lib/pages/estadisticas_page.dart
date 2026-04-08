@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
 
+import '../widgets/custom_navbar.dart';
 import '../providers/presupuesto_provider.dart';
 import '../providers/ganancia_provider.dart';
 import '../providers/categoria_provider.dart';
@@ -151,16 +152,31 @@ class _EstadisticasPageState extends State<EstadisticasPage> {
 
           /// 🔹 RESUMEN ABAJO
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(12),
+              color: mostrarPresupuestos
+                  ? Colors.red.withOpacity(0.08)
+                  : Colors.green.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(15),
             ),
-            child: Text(
-              mostrarPresupuestos
-                  ? "Has gastado ${(totalActual / totalMeta * 100).toStringAsFixed(1)}% del total presupuestado."
-                  : "Has alcanzado ${(totalActual / totalMeta * 100).toStringAsFixed(1)}% del objetivo total.",
-              style: const TextStyle(fontSize: 14),
+            child: Row(
+              children: [
+                Icon(
+                  mostrarPresupuestos
+                      ? Icons.warning_amber_rounded
+                      : Icons.check_circle_outline,
+                  color: mostrarPresupuestos ? Colors.red : Colors.green,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    mostrarPresupuestos
+                        ? "Has gastado ${totalMeta == 0 ? 0 : (totalActual / totalMeta * 100).toStringAsFixed(1)}% del total presupuestado."
+                        : "Has alcanzado ${totalMeta == 0 ? 0 : (totalActual / totalMeta * 100).toStringAsFixed(1)}% del objetivo total.",
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -215,43 +231,118 @@ class _EstadisticasPageState extends State<EstadisticasPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Estadísticas")),
-      body: Column(
-        children: [
-          const SizedBox(height: 20),
+      backgroundColor: const Color.fromARGB(255, 223, 248, 193),
+      appBar: const CustomNavbar(),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final esPantallaGrande = constraints.maxWidth > 900;
+          final anchoContenido = esPantallaGrande ? 900.0 : double.infinity;
 
-          // 🔄 Selector
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ChoiceChip(
-                label: const Text("Presupuestos"),
-                selected: mostrarPresupuestos,
-                selectedColor: Colors.red,
-                onSelected: (_) {
-                  setState(() => mostrarPresupuestos = true);
-                },
+          return Center(
+            child: Container(
+              width: anchoContenido,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+
+                  /// 🔹 TÍTULO GRANDE
+                  Column(
+                    children: [
+                      const Text(
+                        "Estadísticas",
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        width: 60,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 25),
+
+                  // 🔄 Selector
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildToggle("Presupuestos", true),
+                        _buildToggle("Ganancias", false),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+
+                  Expanded(
+                    child: datosAgrupados.isEmpty
+                        ? const Center(
+                            child: Text(
+                              "No hay datos disponibles",
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          )
+                        : Card(
+                            elevation: 6,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: _buildBarChart(datosAgrupados, categorias),
+                            ),
+                          ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 10),
-              ChoiceChip(
-                label: const Text("Ganancias"),
-                selected: !mostrarPresupuestos,
-                selectedColor: Colors.green,
-                onSelected: (_) {
-                  setState(() => mostrarPresupuestos = false);
-                },
-              ),
-            ],
-          ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 
-          const SizedBox(height: 30),
+  Widget _buildToggle(String texto, bool esPresupuesto) {
+    final seleccionado = mostrarPresupuestos == esPresupuesto;
 
-          Expanded(
-            child: datosAgrupados.isEmpty
-                ? const Center(child: Text("No hay datos disponibles"))
-                : _buildBarChart(datosAgrupados, categorias),
+    return GestureDetector(
+      onTap: () {
+        setState(() => mostrarPresupuestos = esPresupuesto);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: seleccionado ? Colors.green : Colors.transparent,
+          borderRadius: BorderRadius.circular(25),
+        ),
+        child: Text(
+          texto,
+          style: TextStyle(
+            color: seleccionado ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.w600,
           ),
-        ],
+        ),
       ),
     );
   }
