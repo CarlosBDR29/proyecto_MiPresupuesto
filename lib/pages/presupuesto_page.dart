@@ -7,8 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:image/image.dart' as img;
 import 'package:go_router/go_router.dart';
 
-//import 'package:file_picker/file_picker.dart';
-
+import '../widgets/custom_navbar.dart';
 import '../providers/presupuesto_provider.dart';
 import '../providers/categoria_provider.dart';
 import '../providers/loginregistro_provider.dart';
@@ -407,169 +406,338 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(presupuesto.titulo)),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            Card(
-              elevation: 3,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      presupuesto.descripcion,
-                      style: const TextStyle(fontSize: 16),
+      backgroundColor: const Color.fromARGB(255, 223, 248, 193),
+      appBar: const CustomNavbar(),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final esPantallaGrande = constraints.maxWidth > 900;
+          final anchoContenido = esPantallaGrande ? 900.0 : double.infinity;
+
+          final porcentaje = ((presupuesto.gastado / presupuesto.limite) * 100)
+              .clamp(0, 100)
+              .toDouble();
+
+          final restanteVisible = presupuesto.restante < 0
+              ? 0
+              : presupuesto.restante;
+
+          Color colorBarra;
+
+          if (porcentaje < 60) {
+            colorBarra = Colors.green;
+          } else if (porcentaje < 90) {
+            colorBarra = Colors.orange;
+          } else {
+            colorBarra = Colors.red;
+          }
+
+          return Center(
+            child: Container(
+              width: anchoContenido,
+              padding: const EdgeInsets.all(20),
+              child: ListView(
+                children: [
+                  Card(
+                    elevation: 6,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
                     ),
-                    const SizedBox(height: 10),
-
-                    Text("Límite: ${presupuesto.limite} €"),
-                    Text("Gastado: ${presupuesto.gastado} €"),
-                    Text(
-                      "Restante: ${(presupuesto.restante < 0 ? 0 : presupuesto.restante)} €",
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    Text(
-                      "Periodo:",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      "${presupuesto.fechaInicio.toString().split(' ')[0]}  →  ${presupuesto.fechaFin.toString().split(' ')[0]}",
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    Text("Estado: ${presupuesto.estado}"),
-                    Text("Categoría: ${presupuesto.tag ?? "Sin categoría"}"),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            ElevatedButton(
-              onPressed: () {
-                editarPresupuestoDialog(context, presupuesto);
-              },
-              child: const Text("Editar presupuesto"),
-            ),
-
-            const SizedBox(height: 10),
-
-            ElevatedButton(
-              onPressed: () async {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text("Confirmar eliminación"),
-                    content: const Text("¿Deseas eliminar este presupuesto?"),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text("Cancelar"),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: const Text("Eliminar"),
-                      ),
-                    ],
-                  ),
-                );
-
-                if (confirm == true) {
-                  await provider.eliminarPresupuesto(presupuesto.documentId!);
-                  if (context.mounted) context.go('/presupuestos');
-                }
-              },
-              child: const Text("Eliminar presupuesto"),
-            ),
-
-            const Divider(height: 40),
-
-            const Text(
-              "Gastos",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-
-            const SizedBox(height: 10),
-
-            ...gastoProvider.gastos.map((gasto) {
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                child: ListTile(
-                  leading: gasto.photoBytes != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.memory(
-                            gasto.photoBytes!,
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          /// TÍTULO
+                          Text(
+                            presupuesto.titulo,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        )
-                      : const Icon(Icons.receipt_long, size: 40),
 
-                  title: Text(
-                    gasto.titulo,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                          const SizedBox(height: 6),
+
+                          Text(
+                            presupuesto.descripcion,
+                            style: const TextStyle(color: Colors.black54),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          /// BARRA PROGRESO
+                          LinearProgressIndicator(
+                            value: porcentaje / 100,
+                            minHeight: 12,
+                            borderRadius: BorderRadius.circular(10),
+                            color: colorBarra,
+                            backgroundColor: Colors.grey.shade300,
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          Text(
+                            "${porcentaje.toStringAsFixed(1)}% utilizado",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: colorBarra,
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          /// DATOS ECONÓMICOS
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildDato(
+                                "Límite",
+                                "${presupuesto.limite.toStringAsFixed(2)} €",
+                              ),
+                              _buildDato(
+                                "Gastado",
+                                "${presupuesto.gastado.toStringAsFixed(2)} €",
+                              ),
+                              _buildDato(
+                                "Restante",
+                                "${restanteVisible.toStringAsFixed(2)} €",
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          /// FECHAS
+                          Text(
+                            "Periodo",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          Text(
+                            "${presupuesto.fechaInicio.toString().split(' ')[0]}  →  ${presupuesto.fechaFin.toString().split(' ')[0]}",
+                          ),
+
+                          const SizedBox(height: 15),
+
+                          /// ESTADO + TAG
+                          Row(
+                            children: [
+                              Chip(
+                                label: Text(presupuesto.estado),
+                                backgroundColor: presupuesto.estado == "Activo"
+                                    ? Colors.green.shade100
+                                    : Colors.red.shade100,
+                              ),
+                              const SizedBox(width: 10),
+                              Chip(
+                                label: Text(presupuesto.tag ?? "Sin categoría"),
+                                backgroundColor: Colors.blue.shade100,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
 
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 20),
+
+                  Row(
                     children: [
-                      Text("${gasto.coste} €"),
-                      Text(gasto.fecha.toString().split(' ')[0]),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          onPressed: () {
+                            editarPresupuestoDialog(context, presupuesto);
+                          },
+                          icon: const Icon(Icons.edit),
+                          label: const Text("Editar"),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                title: const Text("Confirmar eliminación"),
+                                content: const Text(
+                                  "¿Deseas eliminar este presupuesto?",
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                    child: const Text("Cancelar"),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red,
+                                    ),
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    child: const Text("Eliminar"),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (confirm == true) {
+                              await provider.eliminarPresupuesto(
+                                presupuesto.documentId!,
+                              );
+                              if (context.mounted) context.go('/presupuestos');
+                            }
+                          },
+                          icon: const Icon(Icons.delete),
+                          label: const Text("Eliminar"),
+                        ),
+                      ),
                     ],
                   ),
 
-                  onTap: () {
-                    mostrarFormularioGasto(
-                      context,
-                      presupuesto.documentId!,
-                      gastoExistente: gasto,
-                      costeAnterior: gasto.coste,
-                    );
-                  },
+                  const Divider(height: 40),
 
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () async {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text("Confirmar eliminación"),
-                          content: const Text("¿Deseas eliminar este gasto?"),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text("Cancelar"),
-                            ),
-                            ElevatedButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text("Eliminar"),
-                            ),
+                  const Text(
+                    "Gastos",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  ...gastoProvider.gastos.map((gasto) {
+                    return Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(12),
+
+                        leading: gasto.photoBytes != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.memory(
+                                  gasto.photoBytes!,
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.receipt_long,
+                                  color: Colors.green,
+                                  size: 30,
+                                ),
+                              ),
+
+                        title: Text(
+                          gasto.titulo,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("${gasto.coste.toStringAsFixed(2)} €"),
+                            Text(gasto.fecha.toString().split(' ')[0]),
                           ],
                         ),
-                      );
 
-                      if (confirm == true) {
-                        await context.read<GastoProvider>().eliminarGasto(
-                          gasto,
-                          context.read<PresupuestoProvider>(),
-                        );
-                      }
-                    },
-                  ),
-                ),
-              );
-            }).toList(),
-          ],
-        ),
+                        onTap: () {
+                          mostrarFormularioGasto(
+                            context,
+                            presupuesto.documentId!,
+                            gastoExistente: gasto,
+                            costeAnterior: gasto.coste,
+                          );
+                        },
+
+                        // ✅ SOLO ESTE trailing
+                        trailing: IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.red,
+                          ),
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  title: const Text(
+                                    "Eliminar gasto",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  content: const Text(
+                                    "¿Estás seguro de que quieres eliminar este gasto?\nEsta acción no se puede deshacer.",
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: const Text("Cancelar"),
+                                    ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: const Text("Eliminar"),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+
+                            if (confirm == true) {
+                              await context.read<GastoProvider>().eliminarGasto(
+                                gasto,
+                                context.read<PresupuestoProvider>(),
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ],
+              ),
+            ),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
@@ -577,6 +745,23 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
           mostrarFormularioGasto(context, presupuesto.documentId);
         },
       ),
+    );
+  }
+
+  Widget _buildDato(String titulo, String valor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          titulo,
+          style: const TextStyle(fontSize: 12, color: Colors.black54),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          valor,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        ),
+      ],
     );
   }
 }
