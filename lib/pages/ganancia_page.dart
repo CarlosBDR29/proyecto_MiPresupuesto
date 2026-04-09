@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:image/image.dart' as img;
 import 'package:go_router/go_router.dart';
 
+import '../widgets/custom_navbar.dart';
 import '../providers/ganancia_provider.dart';
 import '../providers/ingreso_provider.dart';
 import '../providers/loginregistro_provider.dart';
@@ -390,151 +391,354 @@ class _GananciaPageState extends State<GananciaPage> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(ganancia.titulo)),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            Card(
-              elevation: 3,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      ganancia.descripcion,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    const SizedBox(height: 10),
-                    Text("Objetivo: ${ganancia.objetivo} €"),
-                    Text("Ganado: ${ganancia.ganado} €"),
-                    Text(
-                      "Faltante: ${(ganancia.faltante < 0 ? 0 : ganancia.faltante)} €",
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "Periodo:",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      "${ganancia.fechaInicio.toString().split(' ')[0]} → ${ganancia.fechaFin.toString().split(' ')[0]}",
-                    ),
-                    const SizedBox(height: 10),
-                    Text("Estado: ${ganancia.estado}"),
-                    Text("Categoría: ${ganancia.tag ?? "Sin categoría"}"),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                editarGananciaDialog(context, ganancia);
-              },
-              child: const Text("Editar ganancia"),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () async {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text("Confirmar eliminación"),
-                    content: const Text("¿Deseas eliminar esta ganancia?"),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text("Cancelar"),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: const Text("Eliminar"),
-                      ),
-                    ],
-                  ),
-                );
+      backgroundColor: const Color.fromARGB(255, 223, 248, 193),
+      appBar: const CustomNavbar(),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final esPantallaGrande = constraints.maxWidth > 900;
+          final anchoContenido = esPantallaGrande ? 900.0 : double.infinity;
 
-                if (confirm == true) {
-                  await gananciaProvider.eliminarGanancia(ganancia.documentId!);
-                  if (context.mounted) context.go('/ganancias');
-                }
-              },
-              child: const Text("Eliminar ganancia"),
-            ),
-            const Divider(height: 40),
-            const Text(
-              "Ingresos",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            ...ingresoProvider.ingresos.map((ingreso) {
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                child: ListTile(
-                  leading: ingreso.photoBytes != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.memory(
-                            ingreso.photoBytes!,
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
+          return Center(
+            child: Container(
+              width: anchoContenido,
+              padding: const EdgeInsets.all(20),
+              child: ListView(
+                children: [
+                  Card(
+                    elevation: 6,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          /// TÍTULO
+                          Text(
+                            ganancia.titulo,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        )
-                      : const Icon(Icons.attach_money, size: 40),
-                  title: Text(
-                    ingreso.titulo,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+
+                          const SizedBox(height: 6),
+
+                          /// DESCRIPCIÓN
+                          Text(
+                            ganancia.descripcion,
+                            style: const TextStyle(color: Colors.black54),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          /// BARRA PROGRESO (GANADO / OBJETIVO)
+                          Builder(
+                            builder: (_) {
+                              final porcentaje =
+                                  ((ganancia.ganado / ganancia.objetivo) * 100)
+                                      .clamp(0, 100)
+                                      .toDouble();
+
+                              Color colorBarra;
+
+                              if (porcentaje < 60) {
+                                colorBarra = Colors.green;
+                              } else if (porcentaje < 90) {
+                                colorBarra = Colors.orange;
+                              } else {
+                                colorBarra = Colors.red;
+                              }
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  LinearProgressIndicator(
+                                    value: porcentaje / 100,
+                                    minHeight: 12,
+                                    borderRadius: BorderRadius.circular(10),
+                                    color: colorBarra,
+                                    backgroundColor: Colors.grey.shade300,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    "${porcentaje.toStringAsFixed(1)}% alcanzado",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: colorBarra,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          /// DATOS ECONÓMICOS
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildDato(
+                                "Objetivo",
+                                "${ganancia.objetivo.toStringAsFixed(2)} €",
+                              ),
+                              _buildDato(
+                                "Ganado",
+                                "${ganancia.ganado.toStringAsFixed(2)} €",
+                              ),
+                              _buildDato(
+                                "Faltante",
+                                "${(ganancia.faltante < 0 ? 0 : ganancia.faltante).toStringAsFixed(2)} €",
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          /// PERIODO
+                          Text(
+                            "Periodo",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          Text(
+                            "${ganancia.fechaInicio.toString().split(' ')[0]}  →  ${ganancia.fechaFin.toString().split(' ')[0]}",
+                          ),
+
+                          const SizedBox(height: 15),
+
+                          /// ESTADO + TAG
+                          Row(
+                            children: [
+                              Chip(
+                                label: Text(ganancia.estado),
+                                backgroundColor: ganancia.estado == "Activo"
+                                    ? Colors.green.shade100
+                                    : Colors.red.shade100,
+                              ),
+                              const SizedBox(width: 10),
+                              Chip(
+                                label: Text(ganancia.tag ?? "Sin categoría"),
+                                backgroundColor: Colors.blue.shade100,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 20),
+
+                  Row(
                     children: [
-                      Text("${ingreso.ganado} €"),
-                      Text(ingreso.fecha.toString().split(' ')[0]),
+                      /// EDITAR
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          onPressed: () {
+                            editarGananciaDialog(context, ganancia);
+                          },
+                          icon: const Icon(Icons.edit),
+                          label: const Text("Editar"),
+                        ),
+                      ),
+
+                      const SizedBox(width: 10),
+
+                      /// ELIMINAR
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                title: const Text("Confirmar eliminación"),
+                                content: const Text(
+                                  "¿Deseas eliminar esta ganancia?",
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                    child: const Text("Cancelar"),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red,
+                                    ),
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    child: const Text("Eliminar"),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (confirm == true) {
+                              await context
+                                  .read<GananciaProvider>()
+                                  .eliminarGanancia(ganancia.documentId!);
+
+                              if (context.mounted) {
+                                context.go('/ganancias');
+                              }
+                            }
+                          },
+                          icon: const Icon(Icons.delete),
+                          label: const Text("Eliminar"),
+                        ),
+                      ),
                     ],
                   ),
-                  onTap: () {
-                    mostrarFormularioIngreso(
-                      context,
-                      ganancia.documentId!,
-                      ingresoExistente: ingreso,
-                      ganadoAnterior: ingreso.ganado,
-                    );
-                  },
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () async {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text("Confirmar eliminación"),
-                          content: const Text("¿Deseas eliminar este ingreso?"),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text("Cancelar"),
-                            ),
-                            ElevatedButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text("Eliminar"),
-                            ),
+                  const Divider(height: 40),
+
+                  const Text(
+                    "Ingresos",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  ...ingresoProvider.ingresos.map((ingreso) {
+                    return Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(12),
+
+                        /// IMAGEN O ICONO
+                        leading: ingreso.photoBytes != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.memory(
+                                  ingreso.photoBytes!,
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.attach_money,
+                                  color: Colors.green,
+                                  size: 30,
+                                ),
+                              ),
+
+                        /// TÍTULO
+                        title: Text(
+                          ingreso.titulo,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+
+                        /// SUBTÍTULO
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("${ingreso.ganado.toStringAsFixed(2)} €"),
+                            Text(ingreso.fecha.toString().split(' ')[0]),
                           ],
                         ),
-                      );
-                      if (confirm == true) {
-                        await context.read<IngresoProvider>().eliminarIngreso(
-                          ingreso,
-                          context.read<GananciaProvider>(),
-                        );
-                      }
-                    },
-                  ),
-                ),
-              );
-            }).toList(),
-          ],
-        ),
+
+                        /// CLICK PARA EDITAR
+                        onTap: () {
+                          mostrarFormularioIngreso(
+                            context,
+                            ganancia.documentId!,
+                            ingresoExistente: ingreso,
+                            ganadoAnterior: ingreso.ganado,
+                          );
+                        },
+
+                        /// DELETE CON CONFIRMACIÓN
+                        trailing: IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.red,
+                          ),
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  title: const Text(
+                                    "Eliminar ingreso",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  content: const Text(
+                                    "¿Estás seguro de que quieres eliminar este ingreso?\nEsta acción no se puede deshacer.",
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: const Text("Cancelar"),
+                                    ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: const Text("Eliminar"),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+
+                            if (confirm == true) {
+                              await context
+                                  .read<IngresoProvider>()
+                                  .eliminarIngreso(
+                                    ingreso,
+                                    context.read<GananciaProvider>(),
+                                  );
+                            }
+                          },
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ],
+              ),
+            ),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
@@ -542,6 +746,23 @@ class _GananciaPageState extends State<GananciaPage> {
           mostrarFormularioIngreso(context, ganancia.documentId!);
         },
       ),
+    );
+  }
+
+  Widget _buildDato(String titulo, String valor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          titulo,
+          style: const TextStyle(fontSize: 12, color: Colors.black54),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          valor,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        ),
+      ],
     );
   }
 }
