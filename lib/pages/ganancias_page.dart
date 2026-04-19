@@ -299,11 +299,11 @@ class _GananciasPageState extends State<GananciasPage> {
 
     Color colorBarra;
     if (porcentaje < 60)
-      colorBarra = Colors.green;
+      colorBarra = Colors.red;
     else if (porcentaje < 90)
       colorBarra = Colors.orange;
     else
-      colorBarra = Colors.red;
+      colorBarra = Colors.green;
 
     return Card(
       elevation: 4,

@@ -6,6 +6,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:image/image.dart' as img;
 import 'package:go_router/go_router.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
+import 'dart:html' as html;
 
 import '../widgets/custom_navbar.dart';
 import '../providers/presupuesto_provider.dart';
@@ -35,6 +39,190 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
     Future.microtask(() {
       context.read<GastoProvider>().obtenerGastosPresupuesto(widget.documentId);
     });
+  }
+
+  Future<void> generarPdfPresupuesto(
+    Presupuesto presupuesto,
+    List<Gasto> gastos,
+  ) async {
+    final pdf = pw.Document();
+
+    final porcentaje = ((presupuesto.gastado / presupuesto.limite) * 100).clamp(
+      0,
+      100,
+    );
+
+    final totalGastos = gastos.fold<double>(0, (sum, item) => sum + item.coste);
+
+    final fechaGeneracion = DateTime.now().toString().split(' ')[0];
+
+    pdf.addPage(
+      pw.MultiPage(
+        margin: const pw.EdgeInsets.all(32),
+        build: (context) => [
+          /// LOGO + TITULO
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Container(
+                width: 50,
+                height: 50,
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.green300,
+                  borderRadius: pw.BorderRadius.circular(10),
+                ),
+                alignment: pw.Alignment.center,
+                child: pw.Text(
+                  "MB",
+                  style: pw.TextStyle(
+                    color: PdfColors.white,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ),
+              pw.Text(
+                "Informe de Presupuesto",
+                style: pw.TextStyle(
+                  fontSize: 22,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.green800,
+                ),
+              ),
+            ],
+          ),
+
+          pw.SizedBox(height: 10),
+
+          pw.Text(
+            "Fecha de generación: $fechaGeneracion",
+            style: const pw.TextStyle(fontSize: 10),
+          ),
+
+          pw.Divider(color: PdfColors.green),
+
+          pw.SizedBox(height: 20),
+
+          /// DATOS GENERALES
+          pw.Text(
+            "Información general",
+            style: pw.TextStyle(
+              fontSize: 16,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.green800,
+            ),
+          ),
+
+          pw.SizedBox(height: 10),
+
+          pw.Text("Título: ${presupuesto.titulo}"),
+          pw.Text("Descripción: ${presupuesto.descripcion}"),
+          pw.Text(
+            "Periodo: ${presupuesto.fechaInicio.toString().split(' ')[0]} - ${presupuesto.fechaFin.toString().split(' ')[0]}",
+          ),
+          pw.Text("Estado: ${presupuesto.estado}"),
+          pw.Text("Categoría: ${presupuesto.tag ?? "Sin categoría"}"),
+
+          pw.SizedBox(height: 20),
+
+          /// RESUMEN ECONOMICO
+          pw.Text(
+            "Resumen económico",
+            style: pw.TextStyle(
+              fontSize: 16,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.green800,
+            ),
+          ),
+
+          pw.SizedBox(height: 10),
+
+          pw.Container(
+            padding: const pw.EdgeInsets.all(12),
+            decoration: pw.BoxDecoration(
+              color: PdfColors.green50,
+              borderRadius: pw.BorderRadius.circular(10),
+            ),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text("Límite: ${presupuesto.limite.toStringAsFixed(2)}"),
+                pw.Text("Gastado: ${presupuesto.gastado.toStringAsFixed(2)}"),
+                pw.Text(
+                  "Restante: ${(presupuesto.restante < 0 ? 0 : presupuesto.restante).toStringAsFixed(2)}",
+                ),
+                pw.Text("Uso: ${porcentaje.toStringAsFixed(1)} %"),
+              ],
+            ),
+          ),
+
+          pw.SizedBox(height: 25),
+
+          /// TABLA GASTOS
+          pw.Text(
+            "Listado de gastos",
+            style: pw.TextStyle(
+              fontSize: 16,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.green800,
+            ),
+          ),
+
+          pw.SizedBox(height: 10),
+
+          pw.Table.fromTextArray(
+            headerStyle: pw.TextStyle(
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.white,
+            ),
+            headerDecoration: const pw.BoxDecoration(color: PdfColors.green600),
+            cellAlignment: pw.Alignment.centerLeft,
+            headers: ["Título", "Fecha", "Coste"],
+            data: gastos
+                .map(
+                  (g) => [
+                    g.titulo,
+                    g.fecha.toString().split(' ')[0],
+                    g.coste.toStringAsFixed(2),
+                  ],
+                )
+                .toList(),
+          ),
+
+          pw.SizedBox(height: 15),
+
+          pw.Align(
+            alignment: pw.Alignment.centerRight,
+            child: pw.Container(
+              padding: const pw.EdgeInsets.all(10),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.green200,
+                borderRadius: pw.BorderRadius.circular(8),
+              ),
+              child: pw.Text(
+                "TOTAL GASTOS: ${totalGastos.toStringAsFixed(2)}",
+                style: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.green900,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    final bytes = await pdf.save();
+
+    if (kIsWeb) {
+      final blob = html.Blob([bytes], 'application/pdf');
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      html.AnchorElement(href: url)
+        ..setAttribute("download", "presupuesto_${presupuesto.titulo}.pdf")
+        ..click();
+      html.Url.revokeObjectUrl(url);
+    } else {
+      await Printing.layoutPdf(onLayout: (format) async => bytes);
+    }
   }
 
   Future<void> mostrarFormularioGasto(
@@ -613,6 +801,28 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 10),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                      onPressed: () {
+                        generarPdfPresupuesto(
+                          presupuesto,
+                          gastoProvider.gastos,
+                        );
+                      },
+                      icon: const Icon(Icons.picture_as_pdf),
+                      label: const Text("Exportar a PDF"),
+                    ),
                   ),
 
                   const Divider(height: 40),
