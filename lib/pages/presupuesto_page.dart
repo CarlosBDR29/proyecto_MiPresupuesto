@@ -9,7 +9,8 @@ import 'package:go_router/go_router.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
-import 'dart:html' as html;
+import '../utils/download_mobile.dart'
+    if (dart.library.html) '../utils/download_web.dart';
 
 import '../widgets/custom_navbar.dart';
 import '../providers/presupuesto_provider.dart';
@@ -214,12 +215,7 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
     final bytes = await pdf.save();
 
     if (kIsWeb) {
-      final blob = html.Blob([bytes], 'application/pdf');
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      html.AnchorElement(href: url)
-        ..setAttribute("download", "presupuesto_${presupuesto.titulo}.pdf")
-        ..click();
-      html.Url.revokeObjectUrl(url);
+      descargarPdfWeb(bytes, "presupuesto_${presupuesto.titulo}.pdf");
     } else {
       await Printing.layoutPdf(onLayout: (format) async => bytes);
     }
@@ -738,6 +734,7 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15),
@@ -755,6 +752,7 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15),
@@ -809,6 +807,7 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15),

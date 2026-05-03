@@ -19,6 +19,10 @@ class _RegistroPageState extends State<RegistroPage> {
 
   bool cargando = false;
 
+  bool esCorreoValido(String correo) {
+    return RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(correo);
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.read<LoginRegistroProvider>();
@@ -171,6 +175,19 @@ class _RegistroPageState extends State<RegistroPage> {
                                     final repetir = repetirContrasenaController
                                         .text
                                         .trim();
+
+                                    if (!esCorreoValido(correo)) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Introduce un correo válido',
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
 
                                     if (contrasena != repetir) {
                                       ScaffoldMessenger.of(
