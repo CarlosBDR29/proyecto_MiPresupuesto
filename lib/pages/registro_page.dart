@@ -176,6 +176,21 @@ class _RegistroPageState extends State<RegistroPage> {
                                         .text
                                         .trim();
 
+                                    if (correo.isEmpty ||
+                                        contrasena.isEmpty ||
+                                        repetir.isEmpty) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Todos los campos son obligatorios',
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+
                                     if (!esCorreoValido(correo)) {
                                       ScaffoldMessenger.of(
                                         context,

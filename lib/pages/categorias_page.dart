@@ -113,6 +113,63 @@ class _CategoriasPageState extends State<CategoriasPage> {
     );
   }
 
+  Future<void> confirmarEliminacion(Categoria categoria) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.red),
+              SizedBox(width: 8),
+              Text(
+                'Confirmar eliminación',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: Text(
+            '¿Estás seguro de que deseas eliminar la categoría "${categoria.titulo}"?\n\nEsta acción no se puede deshacer.',
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () => Navigator.pop(context, false),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Eliminar'),
+              onPressed: () => Navigator.pop(context, true),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmar == true) {
+      await context.read<CategoriaProvider>().eliminarCategoria(
+        categoria.documentId!,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Categoría eliminada correctamente'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CategoriaProvider>();
@@ -283,9 +340,7 @@ class _CategoriasPageState extends State<CategoriasPage> {
                 IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
                   onPressed: () {
-                    context.read<CategoriaProvider>().eliminarCategoria(
-                      categoria.documentId!,
-                    );
+                    confirmarEliminacion(categoria);
                   },
                 ),
               ],
