@@ -61,7 +61,6 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
       pw.MultiPage(
         margin: const pw.EdgeInsets.all(32),
         build: (context) => [
-          /// LOGO + TITULO
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
@@ -103,7 +102,6 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
 
           pw.SizedBox(height: 20),
 
-          /// DATOS GENERALES
           pw.Text(
             "Información general",
             style: pw.TextStyle(
@@ -125,7 +123,6 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
 
           pw.SizedBox(height: 20),
 
-          /// RESUMEN ECONOMICO
           pw.Text(
             "Resumen económico",
             style: pw.TextStyle(
@@ -158,7 +155,6 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
 
           pw.SizedBox(height: 25),
 
-          /// TABLA GASTOS
           pw.Text(
             "Listado de gastos",
             style: pw.TextStyle(
@@ -631,7 +627,6 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          /// TÍTULO
                           Text(
                             presupuesto.titulo,
                             style: const TextStyle(
@@ -649,7 +644,6 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
 
                           const SizedBox(height: 20),
 
-                          /// BARRA PROGRESO
                           LinearProgressIndicator(
                             value: porcentaje / 100,
                             minHeight: 12,
@@ -670,7 +664,6 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
 
                           const SizedBox(height: 20),
 
-                          /// DATOS ECONÓMICOS
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -691,7 +684,6 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
 
                           const SizedBox(height: 20),
 
-                          /// FECHAS
                           Text(
                             "Periodo",
                             style: TextStyle(
@@ -705,7 +697,6 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
 
                           const SizedBox(height: 15),
 
-                          /// ESTADO + TAG
                           Row(
                             children: [
                               Chip(

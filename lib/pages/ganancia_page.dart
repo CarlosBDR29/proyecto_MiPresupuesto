@@ -63,7 +63,6 @@ class _GananciaPageState extends State<GananciaPage> {
       pw.MultiPage(
         margin: const pw.EdgeInsets.all(32),
         build: (context) => [
-          /// LOGO + TITULO
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
@@ -105,7 +104,6 @@ class _GananciaPageState extends State<GananciaPage> {
 
           pw.SizedBox(height: 20),
 
-          /// DATOS GENERALES
           pw.Text(
             "Información general",
             style: pw.TextStyle(
@@ -127,7 +125,6 @@ class _GananciaPageState extends State<GananciaPage> {
 
           pw.SizedBox(height: 20),
 
-          /// RESUMEN ECONOMICO
           pw.Text(
             "Resumen económico",
             style: pw.TextStyle(
@@ -160,7 +157,6 @@ class _GananciaPageState extends State<GananciaPage> {
 
           pw.SizedBox(height: 25),
 
-          /// TABLA GASTOS
           pw.Text(
             "Listado de ingresos",
             style: pw.TextStyle(
@@ -601,7 +597,6 @@ class _GananciaPageState extends State<GananciaPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          /// TÍTULO
                           Text(
                             ganancia.titulo,
                             style: const TextStyle(
@@ -612,7 +607,6 @@ class _GananciaPageState extends State<GananciaPage> {
 
                           const SizedBox(height: 6),
 
-                          /// DESCRIPCIÓN
                           Text(
                             ganancia.descripcion,
                             style: const TextStyle(color: Colors.black54),
@@ -620,7 +614,6 @@ class _GananciaPageState extends State<GananciaPage> {
 
                           const SizedBox(height: 20),
 
-                          /// BARRA PROGRESO (GANADO / OBJETIVO)
                           Builder(
                             builder: (_) {
                               final porcentaje =
@@ -663,7 +656,6 @@ class _GananciaPageState extends State<GananciaPage> {
 
                           const SizedBox(height: 20),
 
-                          /// DATOS ECONÓMICOS
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -684,7 +676,6 @@ class _GananciaPageState extends State<GananciaPage> {
 
                           const SizedBox(height: 20),
 
-                          /// PERIODO
                           Text(
                             "Periodo",
                             style: TextStyle(
@@ -698,7 +689,6 @@ class _GananciaPageState extends State<GananciaPage> {
 
                           const SizedBox(height: 15),
 
-                          /// ESTADO + TAG
                           Row(
                             children: [
                               Chip(
@@ -722,7 +712,6 @@ class _GananciaPageState extends State<GananciaPage> {
 
                   Row(
                     children: [
-                      /// EDITAR
                       Expanded(
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
@@ -743,7 +732,6 @@ class _GananciaPageState extends State<GananciaPage> {
 
                       const SizedBox(width: 10),
 
-                      /// ELIMINAR
                       Expanded(
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
@@ -840,7 +828,6 @@ class _GananciaPageState extends State<GananciaPage> {
                       child: ListTile(
                         contentPadding: const EdgeInsets.all(12),
 
-                        /// IMAGEN O ICONO
                         leading: ingreso.photoBytes != null
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
@@ -865,13 +852,11 @@ class _GananciaPageState extends State<GananciaPage> {
                                 ),
                               ),
 
-                        /// TÍTULO
                         title: Text(
                           ingreso.titulo,
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
 
-                        /// SUBTÍTULO
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -880,7 +865,6 @@ class _GananciaPageState extends State<GananciaPage> {
                           ],
                         ),
 
-                        /// CLICK PARA EDITAR
                         onTap: () {
                           mostrarFormularioIngreso(
                             context,
@@ -890,7 +874,6 @@ class _GananciaPageState extends State<GananciaPage> {
                           );
                         },
 
-                        /// DELETE CON CONFIRMACIÓN
                         trailing: IconButton(
                           icon: const Icon(
                             Icons.delete_outline,

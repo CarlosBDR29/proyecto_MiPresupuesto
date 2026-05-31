@@ -191,7 +191,6 @@ class _CategoriasPageState extends State<CategoriasPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            /// 🔹 TÍTULO GRANDE
             Center(
               child: Column(
                 children: [
@@ -218,7 +217,6 @@ class _CategoriasPageState extends State<CategoriasPage> {
 
             const SizedBox(height: 25),
 
-            /// 🔍 BUSCADOR ESTILIZADO
             ConstrainedBox(
               constraints: BoxConstraints(
                 maxWidth: isLarge ? 500 : double.infinity,
@@ -241,7 +239,6 @@ class _CategoriasPageState extends State<CategoriasPage> {
 
             const SizedBox(height: 25),
 
-            /// 📦 LISTA DE CATEGORÍAS
             if (categoriasFiltradas.isEmpty)
               const Center(
                 child: Padding(
@@ -290,7 +287,6 @@ class _CategoriasPageState extends State<CategoriasPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// 🔹 Título
             Text(
               categoria.titulo,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -298,7 +294,6 @@ class _CategoriasPageState extends State<CategoriasPage> {
 
             const SizedBox(height: 6),
 
-            /// 🔹 Descripción
             Text(
               categoria.descripcion,
               style: const TextStyle(color: Colors.black54),
@@ -306,7 +301,6 @@ class _CategoriasPageState extends State<CategoriasPage> {
 
             const SizedBox(height: 15),
 
-            /// 📊 Estadísticas
             Row(
               children: [
                 _buildStatBox(
@@ -327,7 +321,6 @@ class _CategoriasPageState extends State<CategoriasPage> {
 
             const SizedBox(height: 10),
 
-            /// Botones
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [

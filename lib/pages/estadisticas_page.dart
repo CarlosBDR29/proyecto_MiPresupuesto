@@ -44,7 +44,6 @@ class _EstadisticasPageState extends State<EstadisticasPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// 🔹 TOTAL ARRIBA
           Text(
             mostrarPresupuestos
                 ? "Total presupuestado: ${totalMeta.toStringAsFixed(2)} €"
@@ -74,7 +73,6 @@ class _EstadisticasPageState extends State<EstadisticasPage> {
                 maxY: maxValor == 0 ? 10 : maxValor * 1.2,
                 borderData: FlBorderData(show: false),
 
-                /// 🔹 ARREGLA DESBORDAMIENTO LATERAL
                 titlesData: FlTitlesData(
                   topTitles: AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
@@ -126,7 +124,6 @@ class _EstadisticasPageState extends State<EstadisticasPage> {
                   return BarChartGroupData(
                     x: index,
                     barRods: [
-                      /// Barra meta (más clara)
                       BarChartRodData(
                         toY: metaValor,
                         width: 28,
@@ -134,7 +131,6 @@ class _EstadisticasPageState extends State<EstadisticasPage> {
                         borderRadius: BorderRadius.circular(6),
                       ),
 
-                      /// Barra actual (encima)
                       BarChartRodData(
                         toY: actualValor,
                         width: 18,
@@ -150,7 +146,6 @@ class _EstadisticasPageState extends State<EstadisticasPage> {
 
           const SizedBox(height: 20),
 
-          /// 🔹 RESUMEN ABAJO
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -246,7 +241,6 @@ class _EstadisticasPageState extends State<EstadisticasPage> {
                 children: [
                   const SizedBox(height: 20),
 
-                  /// 🔹 TÍTULO GRANDE
                   Column(
                     children: [
                       const Text(
