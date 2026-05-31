@@ -880,7 +880,6 @@ class _PresupuestoPageState extends State<PresupuestoPage> {
                           );
                         },
 
-                        // ✅ SOLO ESTE trailing
                         trailing: IconButton(
                           icon: const Icon(
                             Icons.delete_outline,

@@ -56,7 +56,6 @@ class _RegistroPageState extends State<RegistroPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // 🟢 LOGO
                         Image.asset(
                           'assets/images/LogoMyBudget.png',
                           height: 90,
@@ -76,7 +75,6 @@ class _RegistroPageState extends State<RegistroPage> {
 
                         const SizedBox(height: 30),
 
-                        // 📧 Correo
                         TextField(
                           controller: correoController,
                           decoration: InputDecoration(
@@ -100,7 +98,6 @@ class _RegistroPageState extends State<RegistroPage> {
 
                         const SizedBox(height: 16),
 
-                        // 🔒 Contraseña
                         TextField(
                           controller: contrasenaController,
                           obscureText: true,
@@ -125,7 +122,6 @@ class _RegistroPageState extends State<RegistroPage> {
 
                         const SizedBox(height: 16),
 
-                        // 🔒 Repetir contraseña
                         TextField(
                           controller: repetirContrasenaController,
                           obscureText: true,

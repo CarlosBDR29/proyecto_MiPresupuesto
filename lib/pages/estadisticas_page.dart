@@ -196,7 +196,6 @@ class _EstadisticasPageState extends State<EstadisticasPage> {
     final presupuestos = context.watch<PresupuestoProvider>().presupuestos;
     final ganancias = context.watch<GananciaProvider>().ganancias;
 
-    // 🔹 AGRUPACIÓN POR CATEGORÍA
     Map<String, Map<String, double>> datosAgrupados = {};
 
     if (mostrarPresupuestos) {
@@ -264,7 +263,6 @@ class _EstadisticasPageState extends State<EstadisticasPage> {
                   ),
                   const SizedBox(height: 25),
 
-                  // 🔄 Selector
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
@@ -341,7 +339,6 @@ class _EstadisticasPageState extends State<EstadisticasPage> {
     );
   }
 
-  // 🎨 Generador simple de colores
   Color _generarColor(String key) {
     final hash = key.hashCode;
     return Colors.primaries[hash % Colors.primaries.length];

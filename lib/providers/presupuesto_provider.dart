@@ -106,7 +106,6 @@ class PresupuestoProvider extends ChangeNotifier {
     try {
       final batch = _firestore.batch();
 
-      // 🔹 Buscar gastos asociados (campo anidado)
       final gastosSnapshot = await _firestore
           .collection('gastos')
           .where('gasto.idPresu', isEqualTo: documentId)
@@ -116,7 +115,6 @@ class PresupuestoProvider extends ChangeNotifier {
         batch.delete(doc.reference);
       }
 
-      // 🔹 Borrar presupuesto
       final presupuestoRef = _firestore
           .collection('presupuestos')
           .doc(documentId);

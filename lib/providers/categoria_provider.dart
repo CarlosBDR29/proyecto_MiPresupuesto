@@ -58,14 +58,12 @@ class CategoriaProvider extends ChangeNotifier {
     try {
       final batch = _firestore.batch();
 
-      // 🔹 Actualizar categoría
       final categoriaRef = _firestore
           .collection('categorias')
           .doc(categoria.documentId);
 
       batch.update(categoriaRef, {'categoria': categoria.toJson()});
 
-      // 🔹 Buscar presupuestos relacionados
       final presupuestosSnapshot = await _firestore
           .collection('presupuestos')
           .where('presupuesto.idTag', isEqualTo: categoria.documentId)
@@ -75,7 +73,6 @@ class CategoriaProvider extends ChangeNotifier {
         batch.update(doc.reference, {'presupuesto.tag': categoria.titulo});
       }
 
-      // 🔹 Buscar ganancias relacionadas
       final gananciasSnapshot = await _firestore
           .collection('ganancias')
           .where('ganancia.idTag', isEqualTo: categoria.documentId)

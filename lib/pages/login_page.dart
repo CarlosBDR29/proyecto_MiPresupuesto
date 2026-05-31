@@ -63,7 +63,6 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         const SizedBox(height: 30),
 
-                        // 📧 Correo
                         TextField(
                           controller: correoController,
                           decoration: InputDecoration(
@@ -87,7 +86,6 @@ class _LoginPageState extends State<LoginPage> {
 
                         const SizedBox(height: 16),
 
-                        // 🔒 Contraseña
                         TextField(
                           controller: contrasenaController,
                           obscureText: true,

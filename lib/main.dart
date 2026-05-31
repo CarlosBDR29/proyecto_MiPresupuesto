@@ -18,10 +18,8 @@ import 'providers/ingreso_provider.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1️⃣ Cargar variables de entorno
   await dotenv.load(fileName: ".env");
 
-  // 2️⃣ Inicializar Firebase (Web compatible)
   await Firebase.initializeApp(
     options: FirebaseOptions(
       apiKey: dotenv.env['FIREBASE_API_KEY']!,
@@ -37,8 +35,6 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        // Aquí agregaremos nuestros providers
-        // ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => LoginRegistroProvider()),
         ChangeNotifierProvider(create: (_) => CategoriaProvider()),
         ChangeNotifierProvider(create: (_) => PresupuestoProvider()),

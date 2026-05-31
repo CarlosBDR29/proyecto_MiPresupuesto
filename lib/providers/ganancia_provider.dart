@@ -105,7 +105,6 @@ class GananciaProvider extends ChangeNotifier {
     try {
       final batch = _firestore.batch();
 
-      // 🔹 Buscar ingresos asociados (campo anidado)
       final ingresosSnapshot = await _firestore
           .collection('ingresos')
           .where('ingreso.idGanancia', isEqualTo: documentId)
@@ -115,7 +114,6 @@ class GananciaProvider extends ChangeNotifier {
         batch.delete(doc.reference);
       }
 
-      // 🔹 Borrar ganancia
       final gananciaRef = _firestore.collection('ganancias').doc(documentId);
 
       batch.delete(gananciaRef);
